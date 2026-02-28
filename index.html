@@ -306,7 +306,7 @@ footer em{color:var(--white);font-style:normal}
   <p class="intro-phrase" id="introPhrase"></p>
   <div class="intro-overlay" id="introOverlay"></div>
 </div>
-<audio id="audioEl" src="" preload="none" loop></audio>
+<audio id="audioEl" src="https://res.cloudinary.com/dhoigqtt0/video/upload/v1772187258/SpotiDown.App_-_Touch_of_the_Law_-_Monster_Siren_Records_j4n79i.mp3" preload="none" loop></audio>
 <div id="page-wrap">
 <header class="site-header">
   <div class="header-inner">
@@ -356,7 +356,7 @@ footer em{color:var(--white);font-style:normal}
 <section id="about"><div class="wrap">
   <div class="reveal"><div class="sec-label" data-ru="Глава I" data-en="Chapter I">Глава I</div><h2 data-ru="Обо мне" data-en="About">Обо мне</h2></div>
   <div class="about-layout">
-    <div class="about-avatar-wrap reveal"><img class="about-avatar" src="" alt="avatar"></div>
+    <div class="about-avatar-wrap reveal"><img class="about-avatar" src="https://i.postimg.cc/JntKGjhN/Lone3.png" alt="avatar"></div>
     <div class="about-right">
       <div class="about-intro reveal">
         <p data-ru="Я UI/UX-дизайнер, для которого важен не только результат, но и сам процесс — внимательный, продуманный, честный к пользователю и продукту." data-en="I'm a UI/UX designer who cares not just about the result, but about the process itself — attentive, deliberate, and honest to the user and the product.">Я UI/UX-дизайнер, для которого важен не только результат, но и сам процесс — внимательный, продуманный, честный к пользователю и продукту.</p>
@@ -607,7 +607,15 @@ var vid = document.getElementById('mainVid');
 var vShell = document.getElementById('videoShell');
 vid.volume = VIDEO_VOLUME;
 (function(){ if(vid.src && vid.src!=='' && vid.src!==location.href) document.getElementById('vidEmpty').style.display='none'; })();
-function toggleVideo(){ if(!vid.src||vid.src===location.href) return; if(!vid.paused) vid.pause(); else vid.play().catch(function(){}); }
+function toggleVideo(){
+  if(!vid.src||vid.src===location.href) return;
+  if(!vid.paused){
+    vid._userPause = true;  /* пользователь нажал паузу — можно запустить музыку */
+    vid.pause();
+  } else {
+    vid.play().catch(function(){});
+  }
+}
 function toggleMute(){ vid.muted=!vid.muted; document.getElementById('vidVolBtn').innerHTML=vid.muted?'&#128263;':'&#128266;'; }
 
 /* Клик по любой области плеера = play/pause
@@ -624,13 +632,14 @@ vid.addEventListener('play',function(){
   clearInterval(vTimer); vTimer=setInterval(function(){
     if(vid.duration>0){ document.getElementById('vidFill').style.width=(vid.currentTime/vid.duration*100)+'%'; document.getElementById('vidTime').textContent=fmt(vid.currentTime)+' / '+fmt(vid.duration); }
   },300);
-  /* Ставим музыку на паузу когда видео начинает играть */
+  /* Видео играет — музыку на паузу */
   if(mPlaying) stopMusic();
 });
 vid.addEventListener('pause',function(){
   document.getElementById('vidIcon').innerHTML=PLAY_SVG; vShell.classList.add('paused'); clearInterval(vTimer);
-  /* Возобновляем музыку когда пользователь поставил видео на паузу */
-  if(!mPlaying && aud.src && aud.src !== location.href) startMusic();
+  /* Музыка запускается только если пользователь сам нажал паузу (не скролл, не открытие проекта) */
+  if(!vid._scrollPause && vid._userPause && !mPlaying && aud.src && aud.src !== location.href) startMusic();
+  vid._userPause = false;
 });
 vid.addEventListener('ended',function(){
   document.getElementById('vidIcon').innerHTML=PLAY_SVG; vShell.classList.add('paused'); clearInterval(vTimer);
@@ -639,7 +648,19 @@ vid.addEventListener('ended',function(){
 });
 vid.addEventListener('loadedmetadata',function(){ document.getElementById('vidTime').textContent='0:00 / '+fmt(vid.duration); document.getElementById('vidEmpty').style.display='none'; });
 document.getElementById('vidProg').addEventListener('click',function(e){ if(!vid.duration) return; var r=e.currentTarget.getBoundingClientRect(); vid.currentTime=((e.clientX-r.left)/r.width)*vid.duration; });
-new IntersectionObserver(function(entries){ entries.forEach(function(e){ if(!vid.src||vid.src===location.href||vid.src==='') return; if(e.isIntersecting) vid.play().catch(function(){}); else vid.pause(); }); },{threshold:0.5}).observe(document.getElementById('video'));
+new IntersectionObserver(function(entries){ entries.forEach(function(e){
+  if(!vid.src||vid.src===location.href||vid.src==='') return;
+  if(e.isIntersecting){
+    /* Видео входит в экран — запускаем автоматически */
+    vid._userPause = false;
+    vid.play().catch(function(){});
+  } else {
+    /* Видео уходит из экрана — тихо ставим на паузу, музыку НЕ трогаем */
+    vid._scrollPause = true;
+    vid.pause();
+    vid._scrollPause = false;
+  }
+}); },{threshold:0.5}).observe(document.getElementById('video'));
 
 /* PROJECT PAGE */
 var projPage = document.getElementById('project-page');
