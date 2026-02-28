@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://res.cloudinary.com/dhoigqtt0/image/upload/v1772271035/LogoLone_czqxjw.png">
-<title>Portfolio LoneFea</title>
+<title>LoneFea</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syncopate:wght@400;700&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
 <style>
@@ -306,7 +306,7 @@ footer em{color:var(--white);font-style:normal}
   <p class="intro-phrase" id="introPhrase"></p>
   <div class="intro-overlay" id="introOverlay"></div>
 </div>
-<audio id="audioEl" src="https://res.cloudinary.com/dhoigqtt0/video/upload/v1772187258/SpotiDown.App_-_Touch_of_the_Law_-_Monster_Siren_Records_j4n79i.mp3" preload="none" loop></audio>
+<audio id="audioEl" src="" preload="none" loop></audio>
 <div id="page-wrap">
 <header class="site-header">
   <div class="header-inner">
@@ -346,7 +346,7 @@ footer em{color:var(--white);font-style:normal}
   <canvas id="forestCanvas"></canvas>
   <div class="hero-mist-top"></div><div class="hero-mist"></div>
   <div class="hero-content"><div class="wrap">
-    <div class="hero-eyebrow" data-ru="Мой псевдонимV" data-en="My pseudonym">Мой всевдоним</div>
+    <div class="hero-eyebrow" data-ru="Мой псевдоним" data-en="Мой псевдоним">Мой псевдоним</div>
     <h1 class="hero-title">Lone<br><span>Fea</span></h1>
     <p class="hero-tagline" data-ru="Превращаю сложное в ясное." data-en="Turning complexity into clarity.">Превращаю сложное в ясное.</p>
   </div></div>
@@ -366,7 +366,7 @@ footer em{color:var(--white);font-style:normal}
         <div class="stat-row" style="transition-delay:.12s"><span class="stat-key" data-ru="Возраст" data-en="Age">Возраст</span><span class="stat-val">21</span><span class="stat-sub" data-ru="лет" data-en="years">лет</span></div>
         <div class="stat-row" style="transition-delay:.19s"><span class="stat-key" data-ru="Стаж" data-en="Experience">Стаж</span><span class="stat-val">3</span><span class="stat-sub" data-ru="лет в профессии" data-en="years in field">лет в профессии</span></div>
         <div class="stat-row" style="transition-delay:.26s"><span class="stat-key" data-ru="Специализация" data-en="Specialization">Специализация</span><span class="stat-val">UI / UX</span></div>
-        <div class="stat-row" style="transition-delay:.33s"><span class="stat-key" data-ru="Neutral" data-en="Location">Neutral</span><span class="stat-val">Neutral</span></div>
+        <div class="stat-row" style="transition-delay:.33s"><span class="stat-key" data-ru="Локация" data-en="Location">Локация</span><span class="stat-val">Neutral</span></div>
       </div><!-- /about-stats -->
       <!-- Инструменты — вне about-stats, без левой линии -->
       <div class="tools-section">
@@ -536,7 +536,7 @@ footer em{color:var(--white);font-style:normal}
    ║  НАСТРОЙКИ ГРОМКОСТИ                     ║
    ║  0.0 = тишина    1.0 = максимум          ║
    ╚══════════════════════════════════════════╝ */
-var MUSIC_VOLUME = 0.2;  /* ← ГРОМКОСТЬ МУЗЫКИ: меняй это число */
+var MUSIC_VOLUME = 0.5;  /* ← ГРОМКОСТЬ МУЗЫКИ: меняй это число */
 var VIDEO_VOLUME = 0.8;  /* ← ГРОМКОСТЬ ВИДЕО:  меняй это число */
 var PLAY_SVG  = '<path d="M8 5v14l11-7z"/>';
 var PAUSE_SVG = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
@@ -600,14 +600,7 @@ document.getElementById('mpProgress').addEventListener('click',function(e){
   aud.currentTime=((e.clientX-r.left)/r.width)*aud.duration;
 });
 
-/* Запуск музыки при первом клике пользователя */
-function onFirstClick(){
-  document.removeEventListener('click', onFirstClick);
-  document.removeEventListener('touchstart', onFirstClick);
-  if(!mPlaying) startMusic();
-}
-document.addEventListener('click', onFirstClick);
-document.addEventListener('touchstart', onFirstClick);
+/* Автозапуск музыки отключён — только ручной запуск через кнопку play */
 
 /* VIDEO */
 var vid = document.getElementById('mainVid');
@@ -631,9 +624,19 @@ vid.addEventListener('play',function(){
   clearInterval(vTimer); vTimer=setInterval(function(){
     if(vid.duration>0){ document.getElementById('vidFill').style.width=(vid.currentTime/vid.duration*100)+'%'; document.getElementById('vidTime').textContent=fmt(vid.currentTime)+' / '+fmt(vid.duration); }
   },300);
+  /* Ставим музыку на паузу когда видео начинает играть */
+  if(mPlaying) stopMusic();
 });
-vid.addEventListener('pause',function(){ document.getElementById('vidIcon').innerHTML=PLAY_SVG; vShell.classList.add('paused'); clearInterval(vTimer); });
-vid.addEventListener('ended',function(){ document.getElementById('vidIcon').innerHTML=PLAY_SVG; vShell.classList.add('paused'); clearInterval(vTimer); });
+vid.addEventListener('pause',function(){
+  document.getElementById('vidIcon').innerHTML=PLAY_SVG; vShell.classList.add('paused'); clearInterval(vTimer);
+  /* Возобновляем музыку когда пользователь поставил видео на паузу */
+  if(!mPlaying && aud.src && aud.src !== location.href) startMusic();
+});
+vid.addEventListener('ended',function(){
+  document.getElementById('vidIcon').innerHTML=PLAY_SVG; vShell.classList.add('paused'); clearInterval(vTimer);
+  /* Возобновляем музыку когда видео закончилось */
+  if(!mPlaying && aud.src && aud.src !== location.href) startMusic();
+});
 vid.addEventListener('loadedmetadata',function(){ document.getElementById('vidTime').textContent='0:00 / '+fmt(vid.duration); document.getElementById('vidEmpty').style.display='none'; });
 document.getElementById('vidProg').addEventListener('click',function(e){ if(!vid.duration) return; var r=e.currentTarget.getBoundingClientRect(); vid.currentTime=((e.clientX-r.left)/r.width)*vid.duration; });
 new IntersectionObserver(function(entries){ entries.forEach(function(e){ if(!vid.src||vid.src===location.href||vid.src==='') return; if(e.isIntersecting) vid.play().catch(function(){}); else vid.pause(); }); },{threshold:0.5}).observe(document.getElementById('video'));
@@ -772,7 +775,7 @@ document.addEventListener('keydown',function(e){
     setTimeout(function(){ document.getElementById('page-wrap').classList.add('visible'); },500);
     setTimeout(function(){
       iRunning=false; intro.style.display='none'; document.body.style.overflow='';
-      /* Музыка запустится через onFirstClick при первом клике */
+      /* Музыка запускается только вручную кнопкой play */
     },1800);
   }
   document.body.style.overflow='hidden';
